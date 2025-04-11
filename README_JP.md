@@ -5,7 +5,7 @@
 初めてのプラグインなので最適化がされていないと思います。
 ​
 ## 使用方法
-1. Endstoneのpluginsフォルダに最新のリリースからダウンロードした実行ファイルを入れ、一度サーバーを起動します。
+1. Endstoneのpluginsフォルダに[最新のリリース](https://github.com/Kuma3mccm/inventory-share-plugin/releases/latest)からダウンロードした実行ファイルを入れ、一度サーバーを起動します。
 2. `plugins/inventory_share_plugin/config.toml`が生成されるので内容を自身で変更します。
 3. サーバーを再起動もしくはリロードします。
 4. :partying_face: 
