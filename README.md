@@ -10,3 +10,5 @@ I think it isn't optimized because it's my first plugin.
 2. Since`plugins/inventory_share_plugin/config.toml` is generated, I will change the content myself.
 3. Restart or reload the server.
 4. :partying_face: 
+
+inventory-share-plugin by Kuma3mccm is licensed under the Apache License, Version2.0
