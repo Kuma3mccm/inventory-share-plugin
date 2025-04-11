@@ -1,3 +1,3 @@
-from endstone_repro_plugin.repro_plugin import ReproPlugin
+from endstone_inventory_share_plugin.inventory_share_plugin import InventorySharePlugin
 
-__all__ = ["ReproPlugin"]
+__all__ = ["InventorySharePlugin"]
