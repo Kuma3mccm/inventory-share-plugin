@@ -1,6 +1,7 @@
 # Inventory share plugin
 This is an inventory sharing plugin between multiple servers that uses SQL available in [Endstone](https://github.com/EndstoneMC/endstone "Endstone")
-[JP](https://github.com/Kuma3mccm/inventory-share-plugin/blob/master/README_JP.md)
+
+[日本語版](https://github.com/Kuma3mccm/inventory-share-plugin/blob/master/README_JP.md)
 
 I think it isn't optimized because it's my first plugin.
 
