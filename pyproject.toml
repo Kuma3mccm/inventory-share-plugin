@@ -1,0 +1,15 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "endstone-inventory-share-plugin"
+version = "1.0.0"
+description = "Multi server inventory share plugin"
+dependencies = [
+    "PyMySQL",
+    "pycryptodome"
+]
+
+[project.entry-points."endstone"]
+inventory-share-plugin = "endstone_inventory_share_plugin:InventorySharePlugin"

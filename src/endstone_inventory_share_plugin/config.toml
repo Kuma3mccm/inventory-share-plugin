@@ -1,0 +1,14 @@
+#ip
+sql_host = "exanple.com"
+
+#user
+sql_port = "1433"
+
+#user
+sql_user = "user"
+
+#pass
+sql_pass = "pass"
+
+#dbname
+sql_db_name = "db_name"
