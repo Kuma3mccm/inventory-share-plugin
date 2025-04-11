@@ -1,6 +1,8 @@
 # Inventory share plugin
 [Endstone](https://github.com/EndstoneMC/endstone "Endstone")で使用できるSQLを使用した複数サーバー間でのインベントリ共有プラグインです。
 
+[English](https://github.com/Kuma3mccm/inventory-share-plugin/blob/master/README.md)
+
 ​
 初めてのプラグインなので最適化がされていないと思います。
 ​
