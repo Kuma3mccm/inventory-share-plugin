@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/nventory-share-plugin.iml" filepath="$PROJECT_DIR$/.idea/nventory-share-plugin.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/inventory-share-plugin.iml" filepath="$PROJECT_DIR$/.idea/inventory-share-plugin.iml" />
     </modules>
   </component>
 </project>
