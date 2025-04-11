@@ -9,3 +9,5 @@
 2. `plugins/inventory_share_plugin/config.toml`が生成されるので内容を自身で変更します。
 3. サーバーを再起動もしくはリロードします。
 4. :partying_face: 
+
+inventory-share-plugin by Kuma3mccm is licensed under the Apache License, Version2.0
