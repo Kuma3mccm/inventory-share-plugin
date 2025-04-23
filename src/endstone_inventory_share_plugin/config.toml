@@ -11,4 +11,4 @@ sql_user = "user"
 sql_pass = "pass"
 
 #dbname
-sql_db_name = "db_name"
+sql_db_name = "player_data"
