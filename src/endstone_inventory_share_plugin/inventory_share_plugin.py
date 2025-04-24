@@ -135,9 +135,12 @@ class InventorySharePlugin(Plugin):
         if result and result[0] == 'True':
             target.kick("This account is already logged in on another server.")
             return
-        else:
+        elif result:
             cursor.execute("UPDATE player_data SET is_logged_in = 'True' WHERE player_xuid = %s", (target.xuid,))
-            conn.commit()
+        else:
+            cursor.execute("INSERT INTO player_data (player_xuid, is_logged_in) VALUES (%s, 'True')", (target.xuid,))
+
+        conn.commit()
 
         cursor.close()
         conn.close()
@@ -152,7 +155,7 @@ class InventorySharePlugin(Plugin):
         cursor.execute("SELECT player_inv FROM player_data WHERE player_xuid = %s", target.xuid)
         result = cursor.fetchone()
 
-        if result:
+        if result and result[0]:
             inventory_data = result[0]
             matches = re.findall(
                 r'§eitem_slot:(-?\d+)\s+item:(\S+)\s+amount:(\d+)\s+name:(\S+)\s+lore:(None|\[.*?\])',
