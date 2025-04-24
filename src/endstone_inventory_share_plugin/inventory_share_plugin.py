@@ -135,10 +135,6 @@ class InventorySharePlugin(Plugin):
         if result and result[0] == 'True':
             target.kick("This account is already logged in on another server.")
             return
-        elif result:
-            cursor.execute("UPDATE player_data SET is_logged_in = 'True' WHERE player_xuid = %s", (target.xuid,))
-        else:
-            cursor.execute("INSERT INTO player_data (player_xuid, is_logged_in) VALUES (%s, 'True')", (target.xuid,))
 
         conn.commit()
 
@@ -151,6 +147,14 @@ class InventorySharePlugin(Plugin):
         target = event.player
         set_login_status(target.xuid, False)
         conn, cursor = connect_db(self.sql_host, self.sql_port, self.sql_user, self.sql_pass, self.sql_db_name)
+
+        cursor.execute("SELECT is_logged_in FROM player_data WHERE player_xuid = %s", (target.xuid,))
+        result = cursor.fetchone()
+
+        if result:
+            cursor.execute("UPDATE player_data SET is_logged_in = 'True' WHERE player_xuid = %s", (target.xuid,))
+        else:
+            cursor.execute("INSERT INTO player_data (player_xuid, is_logged_in) VALUES (%s, 'True')", (target.xuid,))
 
         cursor.execute("SELECT player_inv FROM player_data WHERE player_xuid = %s", target.xuid)
         result = cursor.fetchone()
