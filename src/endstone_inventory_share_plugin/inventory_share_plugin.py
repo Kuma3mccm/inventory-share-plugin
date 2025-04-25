@@ -17,9 +17,10 @@ def get_item_data(item: ItemStack, item_num: int) -> dict:
             'item': item.type,
             'amount': item.amount,
             'name': item.item_meta.display_name if item.item_meta.has_display_name else "None",
-            'lore': item.item_meta.lore if item.item_meta.has_lore else "None"
+            'lore': item.item_meta.lore if item.item_meta.has_lore else "None",
+            'damage': item.item_meta.damage if item.item_meta.has_damage else 0
         }
-    return {'num': item_num, 'item': "None", 'amount': 0, 'name': "None", 'lore': "None"}
+    return {'num': item_num, 'item': "None", 'amount': 0, 'name': "None", 'lore': "None", 'damage': 0}
 
 
 def connect_db(host, port, user, password, db_name):
@@ -29,15 +30,17 @@ def connect_db(host, port, user, password, db_name):
     return conn, cursor
 
 
-def set_item_with_meta(inv, slot, item_type, amount, name, lore):
+def set_item_with_meta(inv, slot, item_type, amount, name, lore, damage):
     item = ItemStack(str(item_type), int(amount))
 
-    if name != "None" or lore != "None":
+    if name != "None" or lore != "None" or damage != 0:
         meta = item.item_meta
         if name != "None":
             meta.display_name = name
         if lore != "None":
             meta.lore = ast.literal_eval(lore)
+        if damage != 0:
+            meta.damage = damage
         item.set_item_meta(meta)
 
     if slot >= 0:
@@ -162,7 +165,7 @@ class InventorySharePlugin(Plugin):
         if result and result[0]:
             inventory_data = result[0]
             matches = re.findall(
-                r'§eitem_slot:(-?\d+)\s+item:(\S+)\s+amount:(\d+)\s+name:(\S+)\s+lore:(None|\[.*?\])',
+                r'§eitem_slot:(-?\d+)\s+item:(\S+)\s+amount:(\d+)\s+name:(\S+)\s+lore:(None|\[.*?\])\s+damage:(\d+)',
                 inventory_data, re.DOTALL
             )
 
@@ -171,8 +174,8 @@ class InventorySharePlugin(Plugin):
             for slot in ['helmet', 'chestplate', 'leggings', 'boots', 'item_in_off_hand']:
                 setattr(inv, slot, ItemStack("minecraft:air", 1))
 
-            for slot_str, item_type, amount, name, lore in matches:
-                set_item_with_meta(inv, int(slot_str), item_type, int(amount), name, lore)
+            for slot_str, item_type, amount, name, lore, damage in matches:
+                set_item_with_meta(inv, int(slot_str), item_type, int(amount), name, lore, int(damage))
 
         cursor.close()
         conn.close()
@@ -195,7 +198,7 @@ class InventorySharePlugin(Plugin):
                 all_items += [get_item_data(getattr(inv, slot), idx) for idx, slot in zip(range(-1, -6, -1), ['helmet', 'chestplate', 'leggings', 'boots', 'item_in_off_hand'])]
 
                 output = "".join(
-                    f"{'-'*20}\n{ColorFormat.YELLOW}item_slot:{i['num']} \n item:{i['item']} \n amount:{i['amount']} \n name:{i['name']} \n lore:{i['lore']} \n"
+                    f"{'-'*20}\n{ColorFormat.YELLOW}item_slot:{i['num']} \n item:{i['item']} \n amount:{i['amount']} \n name:{i['name']} \n lore:{i['lore']} \n damage:{i['damage']}"
                     for i in all_items
                 )
 
