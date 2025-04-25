@@ -13,4 +13,12 @@
 4. サーバーを再起動もしくはリロードします。
 5. :partying_face: 
 
+## 注意
+このプラグインはまだ開発段階です。\
+このプラグインを使用して発生したいかなる損失も責任を負いかねます。
+
+## 既知の問題
+- NBTを必要とするアイテムはNBTが記録されません。
+- ダメージは記録されません。
+
 inventory-share-plugin by Kuma3mccm is licensed under the Apache License, Version2.0

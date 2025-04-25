@@ -12,4 +12,11 @@ I think it isn't optimized because it's my first plugin.
 4. Restart or reload the server.
 5. :partying_face: 
 
+## Note 
+This plugin is still in the development stage.\
+We cannot be held responsible for any losses incurred from using this plugin. 
+## Known Issues 
+- Items that require NBT do not record NBT.
+- Damage is not recorded.
+
 inventory-share-plugin by Kuma3mccm is licensed under the Apache License, Version2.0
