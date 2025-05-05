@@ -17,6 +17,5 @@ This plugin is still in the development stage.\
 We cannot be held responsible for any losses incurred from using this plugin. 
 ## Known Issues 
 - Items that require NBT do not record NBT.
-- Damage is not recorded.
 
 inventory-share-plugin by Kuma3mccm is licensed under the Apache License, Version2.0
