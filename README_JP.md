@@ -19,6 +19,5 @@
 
 ## 既知の問題
 - NBTを必要とするアイテムはNBTが記録されません。
-- ダメージは記録されません。
 
 inventory-share-plugin by Kuma3mccm is licensed under the Apache License, Version2.0
