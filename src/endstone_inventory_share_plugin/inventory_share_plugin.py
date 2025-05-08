@@ -194,7 +194,7 @@ class InventorySharePlugin(Plugin):
         result = cursor.fetchone()
 
         if result and result[0] == 'True':
-            target.kick("ほかの端末でサーバーに接続しているため、この端末ではサーバーに接続することはできません。")
+            target.kick("You cannot connect to the server from this device because another device is connected to the server.")
             return
 
         conn.commit()
