@@ -18,9 +18,18 @@ def get_item_data(item: ItemStack, item_num: int) -> dict:
             'amount': item.amount,
             'name': item.item_meta.display_name if item.item_meta.has_display_name else "None",
             'lore': item.item_meta.lore if item.item_meta.has_lore else "None",
-            'damage': item.item_meta.damage if item.item_meta.has_damage else 0
+            'damage': item.item_meta.damage if item.item_meta.has_damage else 0,
+            'enchants': item.item_meta.enchants if item.item_meta.has_enchants else {}
         }
-    return {'num': item_num, 'item': "None", 'amount': 0, 'name': "None", 'lore': "None", 'damage': 0}
+    return {
+        'num': item_num,
+        'item': "None",
+        'amount': 0,
+        'name': "None",
+        'lore': "None",
+        'damage': 0,
+        'enchants': {}
+    }
 
 
 def connect_db(host, port, user, password, db_name):
@@ -30,10 +39,10 @@ def connect_db(host, port, user, password, db_name):
     return conn, cursor
 
 
-def set_item_with_meta(inv, slot, item_type, amount, name, lore, damage):
+def set_item_with_meta(inv, slot, item_type, amount, name, lore, damage, enchants):
     item = ItemStack(str(item_type), int(amount))
 
-    if name != "None" or lore != "None" or damage != 0:
+    if name != "None" or lore != "None" or damage != 0 or any(enchants):
         meta = item.item_meta
         if name != "None":
             meta.display_name = name
@@ -41,6 +50,10 @@ def set_item_with_meta(inv, slot, item_type, amount, name, lore, damage):
             meta.lore = ast.literal_eval(lore)
         if damage != 0:
             meta.damage = damage
+        if any(enchants):
+            meta.enchants.clear()
+            for enchant_key, level in enchants.items():
+                meta.add_enchant(enchant_key, int(level), True)
         item.set_item_meta(meta)
 
     if slot >= 0:
@@ -120,7 +133,7 @@ def get_login_status(xuid) -> bool:
 
 
 class InventorySharePlugin(Plugin):
-    api_version = "0.6"
+    api_version = "0.7"
 
     def __init__(self):
         super().__init__()
@@ -217,14 +230,15 @@ class InventorySharePlugin(Plugin):
         else:
             cursor.execute("INSERT INTO player_data (player_xuid, is_logged_in) VALUES (%s, 'True')", (target.xuid,))
 
-        cursor.execute("SELECT player_inv FROM player_data WHERE player_xuid = %s", target.xuid)
+        cursor.execute("SELECT player_inv FROM player_data WHERE player_xuid = %s", (target.xuid,))
         result = cursor.fetchone()
 
         if result and result[0]:
             inventory_data = result[0]
             matches = re.findall(
-                r'§eitem_slot:(-?\d+)\s+item:(\S+)\s+amount:(\d+)\s+name:(\S+)\s+lore:(None|\[.*?\])\s+damage:(\d+)',
-                inventory_data, re.DOTALL
+                r'§eitem_slot:(-?\d+)\s+item:(\S+)\s+amount:(\d+)\s+name:(\S+)\s+lore:(None|\[.*?\])\s+damage:(\d+)\s+enchants:({.*?})',
+                inventory_data,
+                re.DOTALL
             )
 
             inv = self.server.get_player(target.name).inventory
@@ -232,8 +246,15 @@ class InventorySharePlugin(Plugin):
             for slot in ['helmet', 'chestplate', 'leggings', 'boots', 'item_in_off_hand']:
                 setattr(inv, slot, ItemStack("minecraft:air", 1))
 
-            for slot_str, item_type, amount, name, lore, damage in matches:
-                set_item_with_meta(inv, int(slot_str), item_type, int(amount), name, lore, int(damage))
+            for slot_str, item_type, amount, name, lore, damage, enchants_str in matches:
+                if item_type == "None":
+                    continue
+
+                try:
+                    enchants = ast.literal_eval(enchants_str)
+                except Exception:
+                    enchants = {}
+                set_item_with_meta(inv, int(slot_str), item_type, int(amount), name, lore, int(damage), enchants)
 
         cursor.close()
         conn.close()
@@ -256,7 +277,14 @@ class InventorySharePlugin(Plugin):
                 all_items += [get_item_data(getattr(inv, slot), idx) for idx, slot in zip(range(-1, -6, -1), ['helmet', 'chestplate', 'leggings', 'boots', 'item_in_off_hand'])]
 
                 output = "".join(
-                    f"{'-'*20}\n{ColorFormat.YELLOW}item_slot:{i['num']} \n item:{i['item']} \n amount:{i['amount']} \n name:{i['name']} \n lore:{i['lore']} \n damage:{i['damage']}"
+                    f"{'-' * 20}\n"
+                    f"{ColorFormat.YELLOW}item_slot:{i['num']} \n"
+                    f" item:{i['item']} \n"
+                    f" amount:{i['amount']} \n"
+                    f" name:{i['name']} \n"
+                    f" lore:{i['lore']} \n"
+                    f" damage:{i['damage']} \n"
+                    f" enchants:{i['enchants']} \n"
                     for i in all_items
                 )
 
