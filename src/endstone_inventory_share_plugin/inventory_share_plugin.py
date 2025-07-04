@@ -2,7 +2,6 @@ import os
 import re
 import ast
 import pymysql
-import sqlite3
 
 from endstone import *
 from endstone.event import *
@@ -70,68 +69,6 @@ def set_item_with_meta(inv, slot, item_type, amount, name, lore, damage, enchant
         inv.item_in_off_hand = item
 
 
-def init_login_db():
-    conn = sqlite3.connect("login.db")
-    cursor = conn.cursor()
-
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS login_status (
-            xuid TEXT PRIMARY KEY,
-            is_logged_in BOOLEAN
-        )
-    """)
-
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS player_list (
-            xuid TEXT PRIMARY KEY
-        )
-    """)
-
-    conn.commit()
-    conn.close()
-
-
-def set_login_status(xuid, status: bool):
-    conn = sqlite3.connect("login.db")
-    cursor = conn.cursor()
-
-    cursor.execute("""
-        INSERT INTO login_status (xuid, is_logged_in)
-        VALUES (?, ?)
-        ON CONFLICT(xuid) DO UPDATE SET is_logged_in=excluded.is_logged_in
-    """, (xuid, status))
-
-    conn.commit()
-    conn.close()
-
-
-def set_player_list(xuid, status: bool):
-    conn = sqlite3.connect("login.db")
-    cursor = conn.cursor()
-    if status:
-        cursor.execute("""
-            INSERT OR IGNORE INTO player_list (xuid)
-            VALUES (?)
-        """, (xuid,))
-    else:
-        cursor.execute("""
-            DELETE FROM player_list
-            WHERE xuid = ?
-        """, (xuid,))
-
-    conn.commit()
-    conn.close()
-
-
-def get_login_status(xuid) -> bool:
-    conn = sqlite3.connect("login.db")
-    cursor = conn.cursor()
-    cursor.execute("SELECT is_logged_in FROM login_status WHERE xuid = ?", (xuid,))
-    result = cursor.fetchone()
-    conn.close()
-    return result[0] == 1 if result else False
-
-
 class InventorySharePlugin(Plugin):
     api_version = "0.7"
 
@@ -150,6 +87,28 @@ class InventorySharePlugin(Plugin):
         self.sql_pass = self.config["sql_pass"]
         self.sql_db_name = self.config["sql_db_name"]
 
+    def set_login_status(self, xuid, status: bool):
+        # MySQLに接続
+        conn, cursor = connect_db(self.sql_host,self.sql_port,self.sql_user,self.sql_pass,self.sql_db_name)
+
+        cursor.execute("SELECT is_logged_in FROM player_data WHERE player_xuid = %s", xuid)
+        result = cursor.fetchone()
+
+        if result:
+            cursor.execute("UPDATE player_data SET is_logged_in = %s WHERE player_xuid = %s", (str(status), xuid))
+        else:
+            cursor.execute("INSERT INTO player_data (player_xuid, is_logged_in) VALUES (%s, 'True')", xuid)
+
+        conn.commit()
+        conn.close()
+
+    def get_login_status(self, xuid) -> bool:
+        conn, cursor = connect_db(self.sql_host,self.sql_port,self.sql_user,self.sql_pass,self.sql_db_name)
+        cursor.execute("SELECT is_logged_in FROM player_data WHERE player_xuid = %s", xuid)
+        result = cursor.fetchone()
+        conn.close()
+        return result[0] == 1 if result else False
+
     def on_load(self):
         self.logger.info(f"{ColorFormat.AQUA}InventorySharePlugin is loaded!{ColorFormat.RESET}")
 
@@ -157,42 +116,24 @@ class InventorySharePlugin(Plugin):
         self.logger.info(f"{ColorFormat.AQUA}InventorySharePlugin is enabled!{ColorFormat.RESET}")
         self.save_default_config()
         self.load_config()
-        init_login_db()
 
         players = self.server.online_players
 
-        conn_local = sqlite3.connect("login.db")
-        cursor_local = conn_local.cursor()
-
         for player in players:
-            cursor_local.execute("INSERT OR IGNORE INTO player_list (xuid) VALUES (?) ", (player.xuid,))
-            conn_local.commit()
-
-        conn_local.close()
+            xuid = player.xuid
+            self.set_login_status(xuid,True)
 
         if not os.path.exists("plugins/inventory_share_plugin/config.toml"):
             self.logger.error("config.toml not found")
         self.register_events(self)
 
     def on_disable(self):
-        conn_local = sqlite3.connect("login.db")
-        cursor_local = conn_local.cursor()
-
-        cursor_local.execute("SELECT xuid FROM player_list")
-        result = cursor_local.fetchall()
-
-        players = [row[0] for row in result]
+        players = self.server.online_players
 
         for player in players:
-            conn, cursor = connect_db(self.sql_host, self.sql_port, self.sql_user, self.sql_pass, self.sql_db_name)
+            xuid = player.xuid
+            self.set_login_status(xuid,False)
 
-            cursor.execute("UPDATE player_data SET is_logged_in = 'False' WHERE player_xuid = %s", (player,))
-            conn.commit()
-
-            cursor_local.execute("DELETE FROM player_list WHERE xuid = ?", (player,))
-            conn_local.commit()
-
-        conn_local.close()
         self.logger.info(f"{ColorFormat.AQUA}InventorySharePlugin is disabled!{ColorFormat.RESET}")
 
     @event_handler
@@ -200,15 +141,12 @@ class InventorySharePlugin(Plugin):
         self.logger.info("Login Events")
         target = event.player
         conn, cursor = connect_db(self.sql_host, self.sql_port, self.sql_user, self.sql_pass, self.sql_db_name)
-        set_login_status(target.xuid, True)
-        set_player_list(target.xuid, True)
 
-        cursor.execute("SELECT is_logged_in FROM player_data WHERE player_xuid = %s", (target.xuid,))
-        result = cursor.fetchone()
-
-        if result and result[0] == 'True':
+        if self.get_login_status(target.xuid):
             target.kick("You cannot connect to the server from this device because another device is connected to the server.")
             return
+
+        self.set_login_status(target.xuid, True)
 
         conn.commit()
 
@@ -219,7 +157,7 @@ class InventorySharePlugin(Plugin):
     def on_player_join(self, event: PlayerJoinEvent):
         self.logger.info("Join Events")
         target = event.player
-        set_login_status(target.xuid, False)
+        self.set_login_status(target.xuid, False)
         conn, cursor = connect_db(self.sql_host, self.sql_port, self.sql_user, self.sql_pass, self.sql_db_name)
 
         cursor.execute("SELECT is_logged_in FROM player_data WHERE player_xuid = %s", (target.xuid,))
@@ -262,9 +200,9 @@ class InventorySharePlugin(Plugin):
     @event_handler
     def on_player_quit(self, event: PlayerQuitEvent):
         target = event.player
-        if get_login_status(target.xuid):
+        if self.get_login_status(target.xuid):
             self.logger.info(f"{target.name} was kicked because they were connected to another server.")
-            set_login_status(target.xuid, False)
+            self.set_login_status(target.xuid, False)
             return
         else:
             conn, cursor = connect_db(self.sql_host, self.sql_port, self.sql_user, self.sql_pass, self.sql_db_name)
@@ -297,4 +235,3 @@ class InventorySharePlugin(Plugin):
 
             cursor.close()
             conn.close()
-        set_player_list(target.xuid, False)
