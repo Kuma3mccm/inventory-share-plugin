@@ -15,6 +15,8 @@ I think it isn't optimized because it's my first plugin.
 ## Note 
 This plugin is still in the development stage.\
 We cannot be held responsible for any losses incurred from using this plugin. 
+## Milestone
+- Share the contents of the Ender Chest. (1.4.0)
 ## Known Issues 
 - Items that require NBT do not record NBT.
 
